@@ -1,0 +1,16 @@
+# -*- ispell-local-dictionary: "english" -*-
+
+#+TITLE: Org-task tests
+
+* Running tests from command line
+
+#+BEGIN_SRC sh :dir (expand-file-name "..")
+  bin/test
+#+END_SRC
+
+Note that you'll probably want to set a newer version of =org= by setting
+=LIB_ORG_PATH=:
+
+#+BEGIN_SRC sh :dir (expand-file-name "..")
+  LIB_ORG_PATH=~/.emacs.d/var/lib/straight/build/org bin/test
+#+END_SRC

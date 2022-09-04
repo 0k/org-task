@@ -1,0 +1,37 @@
+#!/bin/bash
+
+exname="${0##*/}"
+
+if ! [ -e "bin" -a -d "test" -a -d "lisp" ]; then
+    echo "Please execute this in test directory, with 'bin/$exname'." >&2
+    exit 1
+fi
+
+type -p emacs >/dev/null 2>&1 || {
+    echo "$exname: requires 'emacs' to run." >&2
+    exit 1
+}
+
+
+opts=()
+if [ -n "$LIB_ORG_PATH" ]; then
+    [ -d "$LIB_ORG_PATH" ] || {
+        echo "$exname: directory '$LIB_ORG_PATH' not found." >&2
+        exit 1
+    }
+    opts+=(-L "$LIB_ORG_PATH")
+fi
+
+emacs -Q --batch \
+      -L lisp/ \
+      -L test/ \
+      "${opts[@]}" \
+      --eval "
+(progn
+(org-reload)
+(setq org-confirm-babel-evaluate nil)
+(org-babel-do-load-languages 'org-babel-load-languages
+'((emacs-lisp . t) (shell . t) (org . t))))" \
+      -l lisp/org-task.el \
+      -l test/test-org-task.el \
+      -f org-task-test-run-batch-tests

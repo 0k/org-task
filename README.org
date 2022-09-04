@@ -1,0 +1,79 @@
+# -*- ispell-local-dictionary: "english" -*-
+
+#+TITLE: Org-Task
+
+Additions to orgmode from Emacs to export and synchronize tasking
+information to external backends.
+
+* Status
+
+This package is in early alpha stage. This code is under heavy-development.
+
+* Requirements
+
+Currently requires =cal= tool that is not yet released.
+
+* Installation
+
+Using =straight=:
+
+#+begin_src elisp
+(use-package org-task
+  :straight (org-task :host github :repo "0k/org-task")
+  :bind (
+     ("C-x C-p" . org-task-clock-push)
+   )
+   :init
+   :config
+)
+#+end_src
+
+* Features
+
+- sends your org-mode's LOGBOOK to the =cal= command in order to
+  push them to odoo timesheets.
+
+* Usage
+
+** Org Tasks
+
+Tasks are special org-mode's section having a =TASK_REF= property.
+
+*** TASK_REF property
+
+The task ref format in CONNECTION_IDENTIFIER/TASK_IDENTIFIER. For
+instance, if 'lok' is defined in your =~/.cal.rc= as the connection
+label for an odoo connection, and the =project_task='s =id= in odoo is
+3, the TASK_REF org-mode's property of the section should be =lok/3=.
+
+For now, you need to go fetch yourself the =project_task='s =id=
+yourself in odoo's interface after having created one for instance.
+
+*** Gathered clockings
+
+You can then use the standard clock-in and clock-out to create a
+LOGBOOK entry in the section and its sub-sections.
+
+When called, =org-task-clock-push= will go from parent heading to
+parent heading to find the first one that is actually an =org-task=
+(that defines the =TASK_REF= property). Then it'll parse all subtree
+for non org-task sections and their respective LOGBOOKs to send each
+time through =cal= utility to register them in odoo.
+
+** TASK_CATEG property
+
+=TASK_CATEG= is required to be available to any task you want to apply
+=org-task-clock-push= to. This will produce a prefix to the summary
+sent to =cal= command line that is required. Typically, you'll want
+to add a:
+
+#+begin_example
+#+PROPERTY TASK_CATEG myproj
+#+end_example
+
+in the header of your file.
+
+This is required to properly identify your recorded time, for you as a
+human, and for the algorithm from =cal= to keep in sync information. You
+then don't need to recall the name of your project in the heading label
+of your section.
