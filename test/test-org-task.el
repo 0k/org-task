@@ -146,6 +146,18 @@
 
 "
         (org-task-heading-pos))))
+  (should
+    (equal 1
+      (org-test-with-temp-text "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+<point>
+
+"
+        (org-task-heading-pos))))
+
   )
 
 

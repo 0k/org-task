@@ -75,14 +75,14 @@
 (defun org-task--heading-pos (task-ref)
   "Return position of heading defining TASK-REF property."
   (let ((p (point)))
-    (progn
-      (or (org-up-heading-safe)
-        (beginning-of-buffer))
+    (if (org-up-heading-safe)
       (let* ((cur-task-ref (org-entry-get nil "TASK_REF" t))
               (is-same-task-ref (string-equal cur-task-ref task-ref)))
         (if is-same-task-ref
           (org-task--heading-pos cur-task-ref)
-          p)))))
+          p))
+      p)
+    ))
 
 
 (defun org-task-heading-pos ()
