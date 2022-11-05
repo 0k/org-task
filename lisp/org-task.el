@@ -478,6 +478,14 @@ a subtree narrowed buffer of given task-ref."
     ))
 
 
+;;;###autoload
+(defun org-task-browse-url ()
+  "Visit current task in browser."
+  (interactive)
+  (let* ((task-ref (org-task-get-ref))
+          (url (shell-command-to-string (format "cal task url %s" task-ref))))
+    (browse-url url)))
+
 
 ;;;###autoload (autoload 'org-task-transient "org-task")
 (transient-define-prefix org-task-transient ()
@@ -489,6 +497,7 @@ a subtree narrowed buffer of given task-ref."
   ["Actions"
     ("w" "push to work" org-task-clock-push)
     ("d" "push to description" org-task-content-push)
+    ("b" "open in browser" org-task-browse-url)
     ])
 
 
