@@ -49,21 +49,27 @@
   :type 'string)
 
 
+(defun org-task-backend-task-id-from-task-ref (task-ref)
+  "Return backend and task-id from TASK-REF."
+  (let ((re "^\\(\\([a-zA-Z0-9_-]+\\)/\\)?\\([0-9]+\\)"))
+    (string-match re task-ref)
+    (let* ((backend (if (match-end 2) (match-string 2 task-ref)))
+            (task-id (match-string 3 task-ref)))
+      (cons backend task-id))))
+
 
 ;; Push full specified work
 
 
 (defun org-task-push-work (task-ref start stop project-name summary)
   "Push START STOP clock with given PROJECT-NAME and SUMMARY to TASK-REF."
-  (let ((str (format "%s" task-ref))
-         (re "^\\(\\([a-zA-Z0-9_-]+\\)/\\)?\\([0-9]+\\)"))
-    (string-match re str)
-    (let* ((backend (if (match-end 2) (match-string 2 str)))
-            (task-id (match-string 3 str))
-            (summary (substring-no-properties
-                       (format "%s / %s" project-name summary))))
-      (funcall org-task-push-work-raw-fun
-        backend task-id start stop summary))))
+  (let* ((backend-task-id (org-task-backend-task-id-from-task-ref task-ref))
+          (task-id (cdr backend-task-id))
+          (backend (car backend-task-id))
+          (summary (substring-no-properties
+                     (format "%s / %s" project-name summary))))
+    (funcall org-task-push-work-raw-fun
+      backend task-id start stop summary)))
 
 
 (defun org-task-push-work-raw-fun-cal (backend task-id start stop summary)
