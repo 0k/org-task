@@ -15,9 +15,11 @@
 (require 'org)
 (require 'org-element)
 (require 'cl-lib)
+(require 'transient)
 (when (not (require 'xterm-color nil 'noerror))
   (defun xterm-color-filter (input)
     input))
+(require 'org-task-export)
 
 
 (defcustom org-task-push-work-raw-fun 'org-task-push-work-raw-fun-cal
@@ -193,7 +195,7 @@ a subtree narrowed buffer of given task-ref."
         (org-task--clock-map func)))
     (lambda (current-heading-result children-heading-results)
       (append current-heading-result
-        (apply 'append children-heading-results nil)
+        (apply 'append children-heading-results)
         )
       )))
 
@@ -250,7 +252,7 @@ The whole function will return the top-most COLLECT call."
                                    )
                                  ))
                        task-children-headings
-                       ))
+                       ) nil)
       ))
   )
 
@@ -413,6 +415,81 @@ shown only on error."
       clock-list)
     (process-send-eof process)
     ))
+
+
+(defun org-task--content-map-collect (task-ref)
+  "Collect headings and content as strings contained in the current task TASK-REF.
+
+Assume current narrowing and point and on first char of
+a subtree narrowed buffer of given task-ref."
+  (org-task--map-collect
+    task-ref
+    (lambda (start end task-ref)
+      (save-restriction
+        (narrow-to-region start end)
+        (substring-no-properties (buffer-string))))
+    (lambda (current-heading-result children-heading-results)
+      (concat current-heading-result
+        (apply 'concat (reverse children-heading-results))
+        )
+      )))
+
+
+
+(defun org-task--content (task-heading-pos task-ref)
+  "Collect task TASK-REF starting at TASK-HEADING-POS heading."
+  (save-excursion
+    (goto-char task-heading-pos)
+    (save-restriction
+      (org-narrow-to-subtree)
+      (org-task--content-map-collect task-ref)
+      )))
+
+
+(defun org-task-content ()
+  "Collect current task's headings."
+  (let ((task-ref (org-task-get-ref))
+         (task-heading-pos (org-task-heading-pos)))
+    (if task-heading-pos
+      (org-task--content task-heading-pos task-ref)
+      nil)))
+
+
+
+;;;###autoload
+(defun org-task-content-push ()
+  "Push current heading's content to current task."
+  (interactive)
+  (message "Sending task's content...")
+  (let* (
+          (task-edit-list (org-task-edit-push-list))
+          (process-connection-type nil)
+          (process (org-task-cal-start-process
+                                        ;'("bash" "-c" "CAL_DEBUG=1 cal work add_batch -f")
+                     '("cal" "task" "edit_batch")
+                     ))
+          )  ; use a pipe
+    (mapc (lambda (elt)
+            (process-send-string process
+              (format "%s\0"
+                (string-join elt "\0"))))
+      task-edit-list)
+    (process-send-eof process)
+    ))
+
+
+
+;;;###autoload (autoload 'org-task-transient "org-task")
+(transient-define-prefix org-task-transient ()
+  "Org Task"
+  ;; ["Arguments"
+  ;;  ("-s" "Switch" "--switch")
+  ;;  ("-a" "Another switch" "--another")
+  ;;  ("-m" "Message" "--message=")] ;; simpler
+  ["Actions"
+    ("w" "push to work" org-task-clock-push)
+    ("d" "push to description" org-task-content-push)
+    ])
 
 
 (provide 'org-task)

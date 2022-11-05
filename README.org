@@ -21,7 +21,7 @@ Using =straight=:
 (use-package org-task
   :straight (org-task :host github :repo "0k/org-task")
   :bind (
-     ("C-x C-p" . org-task-clock-push)
+     ("C-c s" . org-task-transient)
    )
    :init
    :config
@@ -32,6 +32,8 @@ Using =straight=:
 
 - sends your org-mode's LOGBOOK to the =cal= command in order to
   push them to odoo timesheets.
+- sends your org-mode's section's body as description through =cal=
+  command.
 
 * Usage
 

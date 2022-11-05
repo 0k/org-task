@@ -497,9 +497,171 @@ b
 
 "
         (org-task--clock-map-collect "bar/3" (lambda (ts te) (cons ts te))))))
+
   )
 
 
+;;
+;; org-task--content-map-collect
+;;
+
+
+(ert-deftest test-org-task/org-task--content-map-collect ()
+  "Test `org-task--content-map-collect' specifications."
+  (should
+    (equal "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+"
+      (org-test-with-temp-text "<point>* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+"
+        (org-task--content-map-collect "bar/3"))))
+
+  (should
+    (equal "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+
+** H1
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+"
+      (org-test-with-temp-text "<point>* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+
+** H1
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+"
+        (org-task--content-map-collect "bar/3"))))
+  (should
+    (equal "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [1970-01-01 Thu 01:00 UTC]--[1970-01-01 Thu 01:01 UTC] =>  0:01
+
+** H1
+  CLOCK: [1970-01-01 Thu 01:01 UTC]--[1970-01-01 Thu 01:02 UTC] =>  0:01
+** H3
+
+wiz
+"
+      (org-test-with-temp-text "<point>* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [1970-01-01 Thu 01:00 UTC]--[1970-01-01 Thu 01:01 UTC] =>  0:01
+
+** H1
+  CLOCK: [1970-01-01 Thu 01:01 UTC]--[1970-01-01 Thu 01:02 UTC] =>  0:01
+
+** H2
+  :PROPERTIES:
+  :TASK_REF: foo/3
+  :END:
+  CLOCK: [1970-01-01 Thu 01:02 UTC]--[1970-01-01 Thu 01:03 UTC] =>  0:01
+
+** H3
+
+wiz
+"
+        (org-task--content-map-collect "bar/3"))))
+
+  )
+
+
+;;
+;; org-task-content
+;;
+
+
+(ert-deftest test-org-task/org-task-content ()
+  "Test `org-task-content' specifications."
+  (should
+    (equal "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+
+
+"
+      (org-test-with-temp-text "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+<point>
+
+"
+        (org-task-content))))
+
+  (should
+    (equal "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+
+** H1
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+"
+      (org-test-with-temp-text "* H<point>
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+
+** H1
+  CLOCK: [2022-09-05 Mon 17:30 CEST]--[2022-09-05 Mon 18:00 CEST] =>  0:30
+"
+        (org-task-content))))
+  (should
+    (equal "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [1970-01-01 Thu 01:00 UTC]--[1970-01-01 Thu 01:01 UTC] =>  0:01
+
+** H1
+  CLOCK: [1970-01-01 Thu 01:01 UTC]--[1970-01-01 Thu 01:02 UTC] =>  0:01
+** H3
+
+wiz
+"
+      (org-test-with-temp-text "* H
+  :PROPERTIES:
+  :TASK_REF: bar/3
+  :END:
+  CLOCK: [1970-01-01 Thu 01:00 UTC]--[1970-01-01 Thu 01:01 UTC] =>  0:01
+<point>
+** H1
+  CLOCK: [1970-01-01 Thu 01:01 UTC]--[1970-01-01 Thu 01:02 UTC] =>  0:01
+
+** H2
+  :PROPERTIES:
+  :TASK_REF: foo/3
+  :END:
+  CLOCK: [1970-01-01 Thu 01:02 UTC]--[1970-01-01 Thu 01:03 UTC] =>  0:01
+
+** H3
+
+wiz
+"
+        (org-task-content))))
+
+  )
+
+
+;;
+;; org-task-clock-push-current
+;;
 
 
 (ert-deftest test-org-task/org-task-clock-push-current ()
@@ -591,6 +753,24 @@ b
   :TASK_REF:    foo/2
   :END:
 
+** local2
+<point>  CLOCK: [1970-01-01 Thu 01:00 CEST]--[1970-01-01 Thu 02:00 CEST] =>  0:01
+"
+          (org-task-clock-push-current)
+          )))
+    (should
+      (equal "cal work add_raw --start=0 --end=3600 --connection=\"foo\" --task-id=1 \"org-task / global / local2\"\n"
+        (org-test-with-temp-text "
+
+* global
+  :PROPERTIES:
+  :TASK_CATEG:    org-task
+  :TASK_REF:    foo/1
+  :END:
+
+
+** local1
+  CLOCK: [1970-01-01 Thu 01:00 CEST]--[1970-01-01 Thu 02:00 CEST] =>  0:01
 ** local2
 <point>  CLOCK: [1970-01-01 Thu 01:00 CEST]--[1970-01-01 Thu 02:00 CEST] =>  0:01
 "
