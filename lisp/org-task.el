@@ -177,17 +177,46 @@ function is meant to be called from another and is recursive."
 
 Assume current narrowing and point and on first char of
 a subtree narrowed buffer of given task-ref."
-  (let* ((current-heading-clocks-results
+  (org-task--map-collect
+    task-ref
+    (lambda (start end task-ref)
+      (save-restriction
+        (narrow-to-region start end)
+        ;; XXXvlab: should build up summary, task-ref as we parse the
+        ;; structure for huge performance perfs
+        (org-task--clock-map func)))
+    (lambda (current-heading-result children-heading-results)
+      (append current-heading-result
+        (apply 'append children-heading-results nil)
+        )
+      )))
+
+
+(defun org-task--map-collect (task-ref func collect)
+  "Map FUNC on each heading of current task TASK-REF and COLLECT them.
+
+Assume current narrowing and point and on first char of
+a subtree narrowed buffer of given task-ref.
+
+FUNC will receive:
+  - point of heading,
+  - point of end of content of current heading (before first child or
+    before next heading),
+  - task-ref
+
+COLLECT will receive:
+  - result of current FUNC call on first heading/content
+  - list of result of COLLECT on each sub-headings of same TASK-REF
+
+The whole function will return the top-most COLLECT call."
+  (let* ((current-heading-result
            (let* ((heading-content-end
                     (save-excursion
                       (or (org-goto-first-child)
                         (goto-char (point-max)))
-                      (point))))
-             (save-restriction
-               (narrow-to-region (point) heading-content-end)
-               ;; XXXvlab: should build up summary, task-ref as we parse the
-               ;; structure for huge performance perfs
-               (org-task--clock-map func))))
+                      (point)))
+                   (p (point)))
+             (funcall func p heading-content-end task-ref)))
           (task-children-headings
             (let ((children-headings nil)
                    (has-more-siblings t))
@@ -205,18 +234,18 @@ a subtree narrowed buffer of given task-ref."
                           (setq has-more-siblings (org-get-next-sibling)))))
                     children-headings)
                   nil)))))
-    (append current-heading-clocks-results
+    (funcall collect current-heading-result
       (apply 'append (mapcar (lambda (p)
                                (save-excursion
                                  (goto-char p)
                                  (save-restriction
                                    (org-narrow-to-subtree)
-                                   (org-task--clock-map-collect task-ref func)
+                                   (org-task--map-collect task-ref func collect)
                                    )
                                  ))
                        task-children-headings
                        ))
-      nil))
+      ))
   )
 
 
