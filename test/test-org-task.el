@@ -40,7 +40,7 @@
 (ert-deftest test-org-task/org-task-push-work ()
   "Test `org-task-push-work' specifications."
   (should
-    (equal '("b" "1" 0 3600 "foo / my summary")
+    (equal '("b" "1" "0" "3600" "foo / my summary")
       (let ((org-task-push-work-raw-fun 'list))
         (org-task-push-work "b/1" 0 3600 "foo" "my summary")))))
 
@@ -666,7 +666,7 @@ wiz
 
 (ert-deftest test-org-task/org-task-clock-push-current ()
   "Test `org-task-clock-push-current' specifications."
-  (let ((org-task-cal-cmdline "echo 'cal work add_raw --start=%d --end=%d --connection=%S --task-id=%s %S'"))
+  (let ((org-task-cal-cmdline "echo 'cal work add_raw --start=%s --end=%s --connection=%S --task-id=%s %S'"))
     ;;; Missing TASK_CATEG should be triggered
     (should-error
       (org-test-with-temp-text "
@@ -786,7 +786,7 @@ wiz
 
 (ert-deftest test-org-task/org-task-clock-push-list ()
   "Test `org-task-clock-push-list' specifications."
-  (let ((org-task-cal-cmdline "echo 'cal work add_raw --start=%d --end=%d --connection=%S --task-id=%d %S'"))
+  (let ((org-task-cal-cmdline "echo 'cal work add_raw --start=%s --end=%s --connection=%S --task-id=%d %S'"))
     ;;; Missing TASK_CATEG should be triggered
     (should-error
       (org-test-with-temp-text "
@@ -824,7 +824,7 @@ wiz
       :type 'user-error)
 
     (should
-      (equal '(("foo" "1" 0.0 3600.0 "org-task / local"))
+      (equal '(("foo" "1" "0" "3600" "org-task / local"))
         (org-test-with-temp-text "
 
 * global
@@ -843,7 +843,7 @@ wiz
           )))
 
     (should
-      (equal '(("foo" "1" 0.0 3600.0 "org-task / local"))
+      (equal '(("foo" "1" "0" "3600" "org-task / local"))
         (org-test-with-temp-text "
 
 * global
@@ -861,7 +861,7 @@ wiz
           (org-task-clock-push-list)
           )))
     (should
-      (equal '(("foo" "1" 0.0 3600.0 "org-task / global / local2"))
+      (equal '(("foo" "1" "0" "3600" "org-task / global / local2"))
         (org-test-with-temp-text "
 
 * global
@@ -882,7 +882,7 @@ wiz
           (org-task-clock-push-list)
           )))
     (should
-      (equal '(("foo" "1" 0.0 3600.0 "org-task / global / local2"))
+      (equal '(("foo" "1" "0" "3600" "org-task / global / local2"))
         (org-test-with-temp-text "
 
 * global
@@ -903,8 +903,8 @@ CLOCK: [1970-01-01 Thu 02:00 CEST]--[1970-01-01 Thu 03:00 CEST] =>  0:01
           (org-task-clock-push-list)
           )))
     (should
-      (equal '(("foo" "1" 7200.0 10800.0 "org-task / global")
-                ("foo" "1" 0.0 3600.0 "org-task / global / local2")
+      (equal '(("foo" "1" "7200" "10800" "org-task / global")
+                ("foo" "1" "0" "3600" "org-task / global / local2")
                 )
         (org-test-with-temp-text "
 

@@ -71,7 +71,7 @@
           (summary (substring-no-properties
                      (format "%s / %s" project-name summary))))
     (funcall org-task-push-work-raw-fun
-      backend task-id start stop summary)))
+      backend task-id (format "%d" start) (format "%d" stop) summary)))
 
 
 (defun org-task-push-work-raw-fun-cal (backend task-id start stop summary)
