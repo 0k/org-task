@@ -84,12 +84,26 @@
 (defun org-task-export-filter-paragraph (text backend info)
   "Ensure correct styling of html export of TEXT BACKEND INFO."
   (when (org-export-derived-backend-p backend 'html)
-    (replace-regexp-in-string "<p>"
-      (concat "<p style='"
-        "margin-top: 0.8em;"
-        "'>")
-      text)))
-
+    (let ((out text))
+      (mapc (lambda (replacement)
+              (setq out
+                (replace-regexp-in-string
+                  (car replacement)
+                  (cdr replacement) out)))
+        (list
+           (cons "<p>" (concat "<p style='"
+                      "margin-top: 0.8em;"
+                      "'>"))
+           (cons "\\B@\\(\\w+\\)\\b" (concat "<span style='"
+                                   "border-radius: 0.2em;"
+                                   "font-size: 1em;"
+                                 "background-color: #18182a;"
+                                 "font-weight: bold;"
+                                 "padding: 0.1em 0.4em 0.1em 0.4em;"
+                                 "color: #aaa;"
+                                 "'>👤 \\1</span>"))
+           ))
+      out)))
 
 
 (defun org-task-export-filter-headline (text backend info)
