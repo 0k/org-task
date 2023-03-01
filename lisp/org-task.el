@@ -596,7 +596,6 @@ a subtree narrowed buffer of given task-ref."
           (task-edit-list (org-task-edit-push-list))
           (process-connection-type nil)
           (process (org-task-cal-start-process
-                                        ;'("bash" "-c" "CAL_DEBUG=1 cal work add_batch -f")
                      '("cal" "task" "edit_batch")
                      ))
           )  ; use a pipe
