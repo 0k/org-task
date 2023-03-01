@@ -31,11 +31,11 @@ Using =straight=:
 * Features
 
 - send your org-mode's LOGBOOK to the =cal= command in order to
-  push them to odoo timesheets.
+  push them to odoo timesheets (with ``w`` for work time).
 - send your org-mode's section's body as description through =cal=
-  command.
+  command (with ``d`` for description).
 - open current task from your org-mode directly in your browser in
-  odoo.
+  odoo (with ``b`` for browser).
 - create a new task in odoo, and make current heading a org-task by
   linking it the newly created task (with ``C`` for create)
 
