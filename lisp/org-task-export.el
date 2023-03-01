@@ -163,6 +163,47 @@
         "' ")
       text)))
 
+(defun org-task-export-filter-quote-block (text backend info)
+  "Ensure correct styling of html export of TEXT BACKEND INFO."
+  (when (org-export-derived-backend-p backend 'html)
+    (replace-regexp-in-string "<blockquote"
+      (concat "<blockquote style='"
+        "color: #bbb;"
+        "border-left: 0.5em solid #446;"
+        "margin-top: 0.8em;"
+        "padding: 0.1em 0.1em 0.8em 0.5em;"
+        "border-radius: 0.2em;"
+        "background-color: #18182a;"
+        "opacity: 0.9;"
+        "font-style: italic;"
+        "'")
+      text)))
+
+(defun org-task-export-filter-verbatim (text backend info)
+  "Ensure correct styling of html export of TEXT BACKEND INFO."
+  (when (org-export-derived-backend-p backend 'html)
+    (replace-regexp-in-string "<code"
+      (concat "<code style='"
+        "color: white;"
+        "font-size: 1em;"
+        "'")
+      text)))
+
+(defun org-task-export-filter-code (text backend info)
+  "Ensure correct styling of html export of TEXT BACKEND INFO."
+  (when (org-export-derived-backend-p backend 'html)
+    (replace-regexp-in-string "<code"
+      (concat "<code style='"
+        "color: #ddd;"
+        "font-size: 1em;"
+        "border-radius: 0.2em;"
+        "background-color: #222;"
+        "padding: 0.2em;"
+        "'")
+      text)))
+
+
+
 
 ;;;###autoload
 (defun org-task-edit-push-list ()
@@ -202,6 +243,12 @@
                           (cons 'org-task-export-filter-fixed-width org-export-filter-fixed-width-functions))
                         (org-export-filter-example-block-functions
                           (cons 'org-task-export-filter-example-block org-export-filter-example-block-functions))
+                        (org-export-filter-quote-block-functions
+                          (cons 'org-task-export-filter-quote-block org-export-filter-quote-block-functions))
+                        (org-export-filter-verbatim-functions
+                          (cons 'org-task-export-filter-verbatim org-export-filter-verbatim-functions))
+                        (org-export-filter-code-functions
+                          (cons 'org-task-export-filter-code org-export-filter-code-functions))
                         )
                   (org-export-string-as text 'html t
                     '(
