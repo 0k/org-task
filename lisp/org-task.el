@@ -571,6 +571,23 @@ a subtree narrowed buffer of given task-ref."
 
 
 ;;;###autoload
+(defun org-task-edit-push-list ()
+  "Get current task edit push list."
+  (let* ((task-ref (org-task-get-ref))
+         (backend-task-id (org-task-backend-task-id-from-task-ref task-ref))
+         (task-id (cdr backend-task-id))
+         (backend (car backend-task-id))
+         (task-heading-pos (org-task-heading-pos)))
+    (if task-heading-pos
+      (progn
+        (message "header: %S")
+      (list
+        (list backend task-id "description"
+          (org-task-export-to-html (org-task--content task-heading-pos task-ref)))))
+      nil)))
+
+
+;;;###autoload
 (defun org-task-content-push ()
   "Push current heading's content to current task."
   (interactive)

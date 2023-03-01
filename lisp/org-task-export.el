@@ -203,69 +203,56 @@
       text)))
 
 
+(defun org-task-export-to-html (text)
+  "Output string html export of TEXT."
+  (concat "<div style='background: black; color: #bbb; border-radius: 0.5em; padding: 1em;' >"
+    "<style>pre.src { color: #bbb; }</style>"
+    (let ((org-export-with-section-numbers nil)
+           (org-export-with-properties nil)
+           )
+      (let* (
+              (org-export-filter-src-block-functions
+                (cons 'org-task-export-filter-src-block org-export-filter-src-block-functions))
+              (org-export-filter-headline-functions
+                (cons 'org-task-export-filter-headline
+                  (cons 'org-task-export-filter-headline-style org-export-filter-headline-functions)))
+              (org-export-filter-underline-functions
+                (cons 'org-task-export-filter-underline org-export-filter-underline-functions))
+              (org-export-filter-plain-list-functions
+                (cons 'org-task-export-filter-plain-list org-export-filter-plain-list-functions))
+              (org-export-filter-paragraph-functions
+                (cons 'org-task-export-filter-paragraph org-export-filter-paragraph-functions))
+              (org-export-filter-timestamp-functions
+                (cons 'org-task-export-filter-timestamp org-export-filter-timestamp-functions))
+              (org-export-filter-keyword-functions
+                (cons 'org-task-export-filter-keyword org-export-filter-keyword-functions))
+              (org-export-filter-fixed-width-functions
+                (cons 'org-task-export-filter-fixed-width org-export-filter-fixed-width-functions))
+              (org-export-filter-example-block-functions
+                (cons 'org-task-export-filter-example-block org-export-filter-example-block-functions))
+              (org-export-filter-quote-block-functions
+                (cons 'org-task-export-filter-quote-block org-export-filter-quote-block-functions))
+              (org-export-filter-verbatim-functions
+                (cons 'org-task-export-filter-verbatim org-export-filter-verbatim-functions))
+              (org-export-filter-code-functions
+                (cons 'org-task-export-filter-code org-export-filter-code-functions))
+              )
+        (with-temp-buffer
+          (insert text)
+          (goto-char (point-min))
+          (let ((org-inhibit-startup t)) (org-mode))
+          (forward-line)
+          (org-export-as 'html t nil t
+            '(
+               :with-toc nil  ;; links don't work because of odoo using hash
+               :with-todo-keywords t
+               :num nil
+               :headline-levels 5
+               )
+            ))
+        ))
+    "</div>"))
 
-
-;;;###autoload
-(defun org-task-edit-push-list ()
-  "Get current task edit push list."
-  (let* ((task-ref (org-task-get-ref))
-         (backend-task-id (org-task-backend-task-id-from-task-ref task-ref))
-         (task-id (cdr backend-task-id))
-         (backend (car backend-task-id))
-         (task-heading-pos (org-task-heading-pos)))
-    (if task-heading-pos
-      (list (list backend task-id "description"
-              (concat "<div style='background: black; color: #bbb; border-radius: 0.5em; padding: 1em;' >"
-                "<style>pre.src { color: #bbb; }</style>"
-                (let ((org-export-with-section-numbers nil)
-                     (org-export-with-properties nil)
-                     )
-                (let* ((text (org-task--content task-heading-pos task-ref))
-                        (text-without-heading
-                          (substring
-                            text (string-search "\n" text)))
-                        (org-export-filter-src-block-functions
-                          (cons 'org-task-export-filter-src-block org-export-filter-src-block-functions))
-                        (org-export-filter-headline-functions
-                          (cons 'org-task-export-filter-headline
-                            (cons 'org-task-export-filter-headline-style org-export-filter-headline-functions)))
-                        (org-export-filter-underline-functions
-                          (cons 'org-task-export-filter-underline org-export-filter-underline-functions))
-                        (org-export-filter-plain-list-functions
-                          (cons 'org-task-export-filter-plain-list org-export-filter-plain-list-functions))
-                        (org-export-filter-paragraph-functions
-                          (cons 'org-task-export-filter-paragraph org-export-filter-paragraph-functions))
-                        (org-export-filter-timestamp-functions
-                          (cons 'org-task-export-filter-timestamp org-export-filter-timestamp-functions))
-                        (org-export-filter-keyword-functions
-                          (cons 'org-task-export-filter-keyword org-export-filter-keyword-functions))
-                        (org-export-filter-fixed-width-functions
-                          (cons 'org-task-export-filter-fixed-width org-export-filter-fixed-width-functions))
-                        (org-export-filter-example-block-functions
-                          (cons 'org-task-export-filter-example-block org-export-filter-example-block-functions))
-                        (org-export-filter-quote-block-functions
-                          (cons 'org-task-export-filter-quote-block org-export-filter-quote-block-functions))
-                        (org-export-filter-verbatim-functions
-                          (cons 'org-task-export-filter-verbatim org-export-filter-verbatim-functions))
-                        (org-export-filter-code-functions
-                          (cons 'org-task-export-filter-code org-export-filter-code-functions))
-                        )
-                    (with-temp-buffer
-                      (insert text)
-                      (goto-char (point-min))
-                      (let ((org-inhibit-startup t)) (org-mode))
-                      (forward-line)
-                      (org-export-as 'html t nil t
-                        '(
-                           :with-toc nil  ;; links don't work because of odoo using hash
-                           :with-todo-keywords t
-                           :num nil
-                           :headline-levels 5
-                           )
-                        ))
-                  ))
-              "</div>")))
-      nil)))
 
 (provide 'org-task-export)
 
