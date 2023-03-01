@@ -39,6 +39,20 @@
   "Face for process errors in `org-task-process-buffer'."
   :group 'org-task-faces)
 
+(defface org-task-process-prefix
+  '((t (:weight bold :background "#444444")))
+  "Face for process prefix in `org-task-process-buffer'."
+  :group 'org-task-faces)
+
+(defface org-task-process-prefix-sep
+  '((t (:weight bold :foreground "#444444")))
+  "Face for process prefix separator in `org-task-process-buffer'."
+  :group 'org-task-faces)
+
+(defface org-task-process-info
+  '((t (:weight bold :foreground "green")))
+  "Face for process errors in `org-task-process-buffer'."
+  :group 'org-task-faces)
 
 (defface org-task-process-command
   '((t (:weight bold :foreground "white")))
@@ -361,13 +375,32 @@ The whole function will return the top-most COLLECT call."
   "Reacts to PROC's EVENT to give a useful feedback."
   (let ((event-type (string-trim event))
          (pbuf (process-buffer proc)))
-    (cond ((string-match event-type "finished")
-            (message "cal-process done."))
-      ((string-match "^exited abnormally with code " event-type)
-        (message "cal-process finished with errors.")
-        (display-buffer pbuf 'display-buffer-at-bottom)
-        (switch-to-buffer-other-window pbuf)
+    (cond
+      ((string-match event-type "finished")
+        (org-task-process-append-to-buffer proc
+          (format "\n%s%s process exited %s\n"
+            (propertize "   "
+              'face 'org-task-process-prefix)
+            (propertize ""
+              'face 'org-task-process-prefix-sep)
+            (propertize "successfully"
+              'face 'org-task-process-info)))
+        (message "cal-process done.")
         )
+      ((string-match "^exited abnormally with code \\([0-9]+\\)" event-type)
+        (let ((exit-code (string-to-number (substring event-type (match-beginning 1) (match-end 1)))))
+          (message "cal-process finished with errors (exit code: %d)." exit-code)
+          (org-task-process-append-to-buffer proc
+            (format "\n%s%s process %s (exit code: %d)\n"
+              (propertize "   "
+                'face 'org-task-process-prefix)
+              (propertize ""
+                'face 'org-task-process-prefix-sep)
+              (propertize "failed"
+                'face 'org-task-process-error)
+               exit-code))
+          (display-buffer pbuf 'display-buffer-at-bottom)
+          (switch-to-buffer-other-window pbuf)))
       (t (message (format "Process: %s had the event '%s'" proc event-type))))))
 
 
@@ -380,8 +413,12 @@ shown only on error."
     (with-current-buffer pbuf
       (let* ((inhibit-read-only t))
         (insert
-          (propertize
-            (format "\n\n\n$ %s\n\n"
+          (format "\n%s%s %s\n"
+            (propertize "   "
+              'face 'org-task-process-prefix)
+            (propertize ""
+              'face 'org-task-process-prefix-sep)
+            (propertize
               (mapconcat #'shell-quote-argument command " ")
               'face 'org-task-process-command)))))
     (make-process
