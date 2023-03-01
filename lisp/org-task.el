@@ -404,12 +404,17 @@ The whole function will return the top-most COLLECT call."
       (t (message (format "Process: %s had the event '%s'" proc event-type))))))
 
 
-(defun org-task-cal-start-process (command)
-  "Start COMMAND asynchronously for org-task and manage output.
+(defun org-task-cal-start-process (command &optional callback)
+  "Start COMMAND asynchronously and manage output.
 
-Output is redirected to org-task-process-buffer and buffer is
-shown only on error."
-  (let* ((pbuf (org-task--process-buffer)))
+It logs output in process windows, but also call CALLBACK with
+2 arguments: output, errlvl
+
+Logs of output are also redirected to `org-task-process-buffer' and
+buffer is shown only on error."
+  (let* ((pbuf (org-task--process-buffer))
+          (callback-fn (or callback
+                         (lambda (output errlvl) t))))
     (with-current-buffer pbuf
       (let* ((inhibit-read-only t))
         (insert
@@ -421,15 +426,32 @@ shown only on error."
             (propertize
               (mapconcat #'shell-quote-argument command " ")
               'face 'org-task-process-command)))))
-    (make-process
-      :name "cal-proc"
-      :buffer pbuf
-      :command command
-      :connection-type nil
-      :noquery t
-      :filter 'org-task-cal-process-filter
-      :sentinel 'org-task-cal-process-sentinel
-      )))
+    (let (
+           (output "")
+           (errlvl 0))
+      (make-process
+        :name "cal-proc"
+        :buffer pbuf
+        :command command
+        :connection-type nil
+        :noquery t
+        :filter
+        (lambda (proc string)
+          (org-task-cal-process-filter proc string)
+          (setq output (concat output string))
+          )
+        :sentinel
+        (lambda (proc event)
+          (org-task-cal-process-sentinel proc event)
+          (let ((event-type (string-trim event)))
+            (cond ((string-match event-type "finished")
+                    (funcall callback-fn output 0))
+              ((string-match "^exited abnormally with code \\([0-9]+\\)"
+                 event-type)
+                (let ((exit-code (string-to-number (substring event-type (match-beginning 1) (match-end 1)))))
+                  (funcall callback-fn output exit-code))
+                ))
+            ))))))
 
 
 (defun org-task--process-buffer ()
