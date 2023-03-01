@@ -577,13 +577,19 @@ a subtree narrowed buffer of given task-ref."
          (backend-task-id (org-task-backend-task-id-from-task-ref task-ref))
          (task-id (cdr backend-task-id))
          (backend (car backend-task-id))
-         (task-heading-pos (org-task-heading-pos)))
+         (task-heading-pos (org-task-heading-pos))
+          (summary (save-excursion
+                     (goto-char task-heading-pos)
+                     (nth 4 (org-heading-components))))
+         (project-name (org-task-get-categ))
+        )
     (if task-heading-pos
-      (progn
-        (message "header: %S")
       (list
         (list backend task-id "description"
-          (org-task-export-to-html (org-task--content task-heading-pos task-ref)))))
+          (org-task-export-to-html (org-task--content task-heading-pos task-ref)))
+        (list backend task-id "name"
+          (format "%s / %s" project-name summary))
+        )
       nil)))
 
 
