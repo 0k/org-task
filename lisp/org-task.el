@@ -520,6 +520,54 @@ a subtree narrowed buffer of given task-ref."
       (org-task--content task-heading-pos task-ref)
       nil)))
 
+;;;###autoload
+(defun org-task-set-task-ref-to-new-task ()
+  "Create task on odoo's side and set task ref to it's number."
+  (interactive)
+  (let* ((summary (nth 4 (org-heading-components)))
+          (project-name (org-task-get-categ))
+          (pos (point))
+          (org-task-set-task-ref
+            (lambda (partner task-ref)
+              (save-excursion
+                (goto-char pos)
+                (org-set-property "TASK_REF" (format "%s/%s" partner task-ref))
+                )))
+          (org-task-cal-create-task-from-summary
+            (lambda (partner)
+              (org-task-cal-start-process
+                (list "cal" "org" "create_task_from_summary"
+                  partner (format "%s / %s" project-name summary))
+                (lambda (output errlvl)
+                  (if (zerop errlvl)
+                    (let ((task-ref (string-to-number output)
+                            ))
+                      (if (zerop task-ref)
+                        (user-error "Invalid task reference received")
+                        (progn
+                          (message "set taskref to %s/%s" partner task-ref)
+                          (funcall org-task-set-task-ref partner task-ref)
+                          )
+                        ))
+                    (user-error "Unexpected error when creating task")
+                    )))))
+          (partner (org-entry-get nil "TASK_PARTNER" t)))
+    (if (eq partner nil)
+      (org-task-cal-start-process
+        '("cal" "config" "get_partners" "--with-odoo")
+        (lambda (output errlvl)
+          (if (eq errlvl 0)
+            (progn
+              (setq partner
+                (completing-read "Create task for partner: "
+                  (split-string output)
+                  nil))
+              (funcall org-task-cal-create-task-from-summary partner))
+            )
+          ))
+      (funcall org-task-cal-create-task-from-summary)
+      )
+    ))
 
 
 ;;;###autoload
@@ -564,6 +612,7 @@ a subtree narrowed buffer of given task-ref."
     ("w" "push to work" org-task-clock-push)
     ("d" "push to description" org-task-content-push)
     ("b" "open in browser" org-task-browse-url)
+    ("C" "bind to new odoo task" org-task-set-task-ref-to-new-task)
     ])
 
 

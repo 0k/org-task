@@ -36,6 +36,8 @@ Using =straight=:
   command.
 - open current task from your org-mode directly in your browser in
   odoo.
+- create a new task in odoo, and make current heading a org-task by
+  linking it the newly created task (with ``C`` for create)
 
 * Usage
 
