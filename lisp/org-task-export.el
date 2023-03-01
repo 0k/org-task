@@ -90,15 +90,6 @@
         "'>")
       text)))
 
-;; (defun org-task-export-filter-quote (text backend info)
-;;   "Ensure correct styling of html export of TEXT BACKEND INFO."
-;;   (when (org-export-derived-backend-p backend 'html)
-;;     (replace-regexp-in-string "<p>"
-;;       (concat "<p style='"
-;;         "margin-top: 0.8em;"
-;;         "'>")
-;;       text)))
-
 
 
 (defun org-task-export-filter-headline (text backend info)
