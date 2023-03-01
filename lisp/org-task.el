@@ -332,8 +332,8 @@ The whole function will return the top-most COLLECT call."
           (org-task-push-work task-ref ts te project-name summary))))))
 
 
-(defun org-task-cal-process-filter (proc string)
-  "Filters PROC's STRING."
+(defun org-task-process-append-to-buffer (proc string)
+  "Append to PROC buffer the given STRING."
   (let* ((pbuf (process-buffer proc)))
     (when (buffer-live-p pbuf)
       (with-current-buffer pbuf
@@ -341,13 +341,20 @@ The whole function will return the top-most COLLECT call."
           (save-excursion
             ;; Insert the text, advancing the process marker.
             (goto-char (process-mark proc))
-            (insert (xterm-color-filter string))
+            (insert string)
             (set-marker (process-mark proc) (point)))
           (goto-char (process-mark proc))
           (let* ((pwin (get-buffer-window pbuf)))
             (if pwin
               (set-window-point pwin (point))))
-          )))))
+          ))
+      ))
+  )
+
+
+(defun org-task-cal-process-filter (proc string)
+  "Filters PROC's STRING."
+  (org-task-process-append-to-buffer proc (xterm-color-filter string)))
 
 
 (defun org-task-cal-process-sentinel (proc event)
