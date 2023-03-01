@@ -117,7 +117,7 @@
                     (car replacement)
                     (cdr replacement) out)))
           '(
-             ("<h2[^>]*>.*</h2>" . "")
+             ("<h2\\([^>]*\\)>\\(.*\\)</h2>" . "<div style='margin-left: -0.3em; border-bottom: 2px dotted #666;'><h1\\1>◽\\2</h1></div>")
              ("<h3\\([^>]*\\)>\\(.*\\)</h3>" . "<h2\\1>◉ \\2</h2>")
              ("<h4\\([^>]*\\)>\\(.*\\)</h4>" . "<h3\\1>○ \\2</h3>")
              ("<h5\\([^>]*\\)>\\(.*\\)</h5>" . "<h4\\1>✸ \\2</h4>")
@@ -250,13 +250,20 @@
                         (org-export-filter-code-functions
                           (cons 'org-task-export-filter-code org-export-filter-code-functions))
                         )
-                  (org-export-string-as text 'html t
-                    '(
-                       :with-toc nil
-                       :with-todo-keywords t
-                       :num nil
-                       :headline-levels 5
-                       ))))
+                    (with-temp-buffer
+                      (insert text)
+                      (goto-char (point-min))
+                      (let ((org-inhibit-startup t)) (org-mode))
+                      (forward-line)
+                      (org-export-as 'html t nil t
+                        '(
+                           :with-toc nil  ;; links don't work because of odoo using hash
+                           :with-todo-keywords t
+                           :num nil
+                           :headline-levels 5
+                           )
+                        ))
+                  ))
               "</div>")))
       nil)))
 
