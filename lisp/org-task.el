@@ -536,7 +536,7 @@ a subtree narrowed buffer of given task-ref."
           (org-task-cal-create-task-from-summary
             (lambda (partner)
               (org-task-cal-start-process
-                (list "cal" "org" "create_task_from_summary"
+                (list "cal" "task" "new" "-q" "-c"
                   partner (format "%s / %s" project-name summary))
                 (lambda (output errlvl)
                   (if (zerop errlvl)
