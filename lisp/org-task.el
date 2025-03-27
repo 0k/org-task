@@ -171,6 +171,29 @@ function is meant to be called from another and is recursive."
   (car (last (org-task-heading-path-full sep))))
 
 
+(defun org-clockstr-to-ts (timestr)
+  "Convert clock TIMESTR to UTC timestamp.
+
+  Note that Emacs doesn't have a reliable way to read timezone information.
+  And
+    (equal
+      (parse-time-string \"2025-01-13 Mon 19:00 CEST\")
+      (parse-time-string \"2025-01-13 Mon 19:00 CET\"))
+
+    (equal
+      (date-to-time \"2025-01-13 Mon 19:00 CET\")
+      (date-to-time \"2025-01-13 Mon 19:00 CEST\"))
+
+  Are both wrongly true as of the writing of this function. So I'm
+  using here `date' from the system."
+  (let* ((out (string-trim
+               (shell-command-to-string
+                (format "date -d '%s' -u +%%s" timestr)))))
+    (unless (string-match-p "\\`[0-9]+\\'" out)
+      (user-error "Invalid timestamp output from date: %s" out))
+    (string-to-number out)))
+
+
 (defun org-task--clock-map (func)
   "Map FUNC on all next clock strings.
 
@@ -179,17 +202,13 @@ function is meant to be called from another and is recursive."
   (let* ((re (concat
                "[ \t]*"
                org-clock-string
-               "[ \t]*\\(\\[.*?\\]\\)-+\\(\\[.*?\\]\\)"
+               "[ \t]*\\[\\(.*?\\)]\\-+\\[\\(.*?\\)\\]"
                "[ \t]*=>[ \t]+\\([0-9]+\\):\\([0-9]+\\)"
                )))
     (if (re-search-forward re nil t)
-      (let* ((ts (float-time
-                   (apply #'encode-time
-                     (save-match-data
-                       (org-parse-time-string (match-string 1))))))
-              (te (float-time
-                    (apply #'encode-time
-                      (org-parse-time-string (match-string 2))))))
+      (let* ((ts (save-match-data
+                   (org-clockstr-to-ts (match-string 1))))
+              (te (org-clockstr-to-ts (match-string 2))))
         (cons (funcall func ts te) (org-task--clock-map func)))
       nil)))
 
